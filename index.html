@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Oil Price Tracker</title>
+    <meta
+      name="description"
+      content="Live WTI and Brent crude oil tracker powered by the U.S. EIA API."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">GitHub Pages Ready</p>
+        <div class="hero-copy">
+          <h1>Live crude oil pricing without a backend.</h1>
+          <p>
+            Track West Texas Intermediate and Brent spot prices with intraday refreshes,
+            historical context, and a browser-stored EIA API key.
+          </p>
+        </div>
+        <div class="hero-meta">
+          <div>
+            <span class="meta-label">Source</span>
+            <span class="meta-value">U.S. Energy Information Administration</span>
+          </div>
+          <div>
+            <span class="meta-label">Refresh</span>
+            <span class="meta-value">Every 15 minutes</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="panel setup-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Setup</p>
+              <h2>Connect your EIA API key</h2>
+            </div>
+            <button id="clear-key" class="ghost-button" type="button">Clear key</button>
+          </div>
+          <p class="panel-copy">
+            This app runs entirely in the browser. Your key is saved in local storage on
+            your device and sent only to the EIA API.
+          </p>
+          <form id="api-form" class="api-form">
+            <label class="field">
+              <span class="field-label">EIA API key</span>
+              <input
+                id="api-key"
+                name="apiKey"
+                type="password"
+                placeholder="Paste your EIA API key"
+                autocomplete="off"
+                spellcheck="false"
+                required
+              />
+            </label>
+            <button class="primary-button" type="submit">Save and load prices</button>
+          </form>
+          <p class="helper-text">
+            Get a free key from
+            <a href="https://www.eia.gov/opendata/register.php" target="_blank" rel="noreferrer">
+              eia.gov/opendata
+            </a>.
+          </p>
+          <p id="status" class="status" role="status">Enter an API key to start.</p>
+        </section>
+
+        <section class="metrics-grid">
+          <article class="panel metric-card" data-series="wti">
+            <p class="section-label">WTI</p>
+            <h2>West Texas Intermediate</h2>
+            <p class="price" id="wti-price">--</p>
+            <p class="delta" id="wti-delta">Waiting for data</p>
+            <p class="timestamp" id="wti-date">--</p>
+          </article>
+          <article class="panel metric-card" data-series="brent">
+            <p class="section-label">Brent</p>
+            <h2>North Sea Brent</h2>
+            <p class="price" id="brent-price">--</p>
+            <p class="delta" id="brent-delta">Waiting for data</p>
+            <p class="timestamp" id="brent-date">--</p>
+          </article>
+        </section>
+
+        <section class="panel chart-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Trend</p>
+              <h2>Last 30 reported days</h2>
+            </div>
+            <button id="refresh-data" class="ghost-button" type="button">Refresh now</button>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="price-chart" aria-label="Oil price chart" role="img"></canvas>
+          </div>
+          <div class="legend-note">
+            <span class="legend-swatch legend-wti"></span> WTI
+            <span class="legend-swatch legend-brent"></span> Brent
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
