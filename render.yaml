@@ -8,6 +8,8 @@ services:
     envVars:
       - key: EIA_API_KEY
         sync: false
+      - key: OILPRICE_API_TOKEN
+        sync: false
       - key: PORT
         value: 10000
       - key: CORS_ORIGIN

@@ -7,6 +7,7 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const eiaApiKey = process.env.EIA_API_KEY;
+const oilPriceApiToken = process.env.OILPRICE_API_TOKEN;
 const corsOrigin = process.env.CORS_ORIGIN || "*";
 
 const SERIES = {
@@ -50,19 +51,25 @@ app.get("/api/oil", async (request, response) => {
     const requestedRange = typeof request.query.range === "string" ? request.query.range : "30d";
     const rangeKey = requestedRange in RANGES ? requestedRange : "30d";
     const range = RANGES[rangeKey];
-    const [wti, brent] = await Promise.all([
+    const [wti, brent, livePrices] = await Promise.all([
       fetchSeries(SERIES.wti, range.points),
       fetchSeries(SERIES.brent, range.points),
+      fetchLivePrices().catch((error) => {
+        console.warn("Live quote fetch failed, falling back to EIA historical close.", error);
+        return null;
+      }),
     ]);
 
     response.json({
       updatedAt: new Date().toISOString(),
       source: "U.S. Energy Information Administration",
+      latestSource: livePrices ? "Oil Price API" : "U.S. Energy Information Administration",
       range: {
         key: rangeKey,
         label: range.label,
         chartPoints: range.chartPoints,
       },
+      latest: livePrices,
       series: {
         wti,
         brent,
@@ -114,4 +121,42 @@ async function fetchSeries(seriesId, points) {
     }))
     .filter((entry) => Number.isFinite(entry.value))
     .sort((left, right) => new Date(left.date) - new Date(right.date));
+}
+
+async function fetchLivePrices() {
+  if (!oilPriceApiToken) {
+    return null;
+  }
+
+  const response = await fetch("https://api.oilpriceapi.com/v1/prices/latest", {
+    headers: {
+      Authorization: `Token ${oilPriceApiToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Oil Price API request failed with status ${response.status}.`);
+  }
+
+  const payload = await response.json();
+  const wti = payload?.data?.WTI;
+  const brent = payload?.data?.BRENT;
+
+  if (!wti || !brent) {
+    throw new Error("Oil Price API returned incomplete latest price data.");
+  }
+
+  return {
+    wti: {
+      price: Number(wti.price),
+      change: typeof wti.change === "string" ? wti.change : null,
+      timestamp: wti.timestamp,
+    },
+    brent: {
+      price: Number(brent.price),
+      change: typeof brent.change === "string" ? brent.change : null,
+      timestamp: brent.timestamp,
+    },
+  };
 }

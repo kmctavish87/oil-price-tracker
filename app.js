@@ -77,8 +77,8 @@ async function loadDashboard(apiKey, rangeKey) {
     const payload = await fetchOilData(apiKey, rangeKey);
     const { wti, brent } = payload;
 
-    updateMetric("wti", wti);
-    updateMetric("brent", brent);
+    updateMetric("wti", wti, payload.latest?.wti, payload.latestSource);
+    updateMetric("brent", brent, payload.latest?.brent, payload.latestSource);
     updateChart({ wti, brent }, payload.range);
     updateChartTitle(payload.range?.key || rangeKey);
     setStatus(`Last updated ${new Date().toLocaleString()}.`, "success");
@@ -116,19 +116,24 @@ async function fetchOilData(apiBaseUrl, rangeKey) {
   return { wti, brent, range: payload?.range };
 }
 
-function updateMetric(key, rows) {
+function updateMetric(key, rows, latestQuote, latestSource) {
   const latest = rows[rows.length - 1];
   const previous = rows[rows.length - 2];
-  const deltaValue = latest.value - previous.value;
+  const displayValue = latestQuote?.price ?? latest.value;
+  const deltaValue = displayValue - previous.value;
   const deltaPercent = previous.value === 0 ? 0 : (deltaValue / previous.value) * 100;
   const directionClass = deltaValue >= 0 ? "is-up" : "is-down";
   const sign = deltaValue >= 0 ? "+" : "";
+  const liveChange = latestQuote?.change;
 
-  elements.prices[key].price.textContent = formatCurrency(latest.value);
-  elements.prices[key].delta.textContent =
-    `${sign}${deltaValue.toFixed(2)} (${sign}${deltaPercent.toFixed(2)}%) vs prior close`;
+  elements.prices[key].price.textContent = formatCurrency(displayValue);
+  elements.prices[key].delta.textContent = liveChange
+    ? `${liveChange} vs prior settlement`
+    : `${sign}${deltaValue.toFixed(2)} (${sign}${deltaPercent.toFixed(2)}%) vs prior close`;
   elements.prices[key].delta.className = `delta ${directionClass}`;
-  elements.prices[key].date.textContent = `Reported ${formatDate(latest.date)}`;
+  elements.prices[key].date.textContent = latestQuote?.timestamp
+    ? `Live via ${latestSource} · ${formatTimestamp(latestQuote.timestamp)}`
+    : `Reported ${formatDate(latest.date)}`;
 }
 
 function updateChart(seriesData, range) {
@@ -270,6 +275,16 @@ function formatDate(value, compact = false) {
     month: compact ? "short" : "long",
     day: "numeric",
     year: compact ? undefined : "numeric",
+  }).format(date);
+}
+
+function formatTimestamp(value) {
+  const date = new Date(value);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   }).format(date);
 }
 

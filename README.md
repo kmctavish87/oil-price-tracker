@@ -9,6 +9,11 @@ Oil price tracker with:
 
 The frontend is published on GitHub Pages and is preconfigured to use the production backend at `https://oil-price-tracker-api.onrender.com`. The backend is a small Node/Express API that keeps the EIA key on the server.
 
+The app can blend two data sources:
+
+- EIA for historical chart data
+- Oil Price API for fresher latest WTI and Brent card prices
+
 ## Files
 
 - `index.html` - app markup
@@ -33,14 +38,15 @@ The frontend is published on GitHub Pages and is preconfigured to use the produc
    ```
 
 3. Set `EIA_API_KEY` in `.env`.
-4. Leave `CORS_ORIGIN=*` for local testing, or set it to your frontend origin.
-5. Start the backend:
+4. Optional: set `OILPRICE_API_TOKEN` if you want fresher live card prices than EIA provides.
+5. Leave `CORS_ORIGIN=*` for local testing, or set it to your frontend origin.
+6. Start the backend:
 
    ```bash
    npm run dev
    ```
 
-6. Test it:
+7. Test it:
 
    ```bash
    curl http://localhost:3000/api/health
@@ -78,6 +84,7 @@ GitHub Pages cannot run a backend server. You need to deploy `server.js` to a se
 Typical flow:
 
 - Set `EIA_API_KEY`
+- Optional: set `OILPRICE_API_TOKEN` for fresher WTI/Brent latest prices
 - Set `CORS_ORIGIN` to your GitHub Pages origin
 - Run `npm start`
 
