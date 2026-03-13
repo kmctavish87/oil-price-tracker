@@ -225,6 +225,18 @@ button:disabled {
   font-size: 0.92rem;
 }
 
+.chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.chart-actions .status {
+  margin: 0;
+}
+
 .status.is-error {
   color: var(--danger);
 }

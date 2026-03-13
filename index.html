@@ -42,34 +42,6 @@
       </header>
 
       <main class="dashboard">
-        <section class="panel setup-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="section-label">Connection</p>
-              <h2>Live backend connected</h2>
-            </div>
-            <a
-              class="ghost-button button-link"
-              href="https://oil-price-tracker-api.onrender.com/api/health"
-              target="_blank"
-              rel="noreferrer"
-            >
-              API health
-            </a>
-          </div>
-          <p class="panel-copy">
-            This frontend is already connected to the production backend, so visitors can
-            open the site and use it immediately.
-          </p>
-          <p class="helper-text">
-            Backend:
-            <a href="https://oil-price-tracker-api.onrender.com" target="_blank" rel="noreferrer">
-              oil-price-tracker-api.onrender.com
-            </a>
-          </p>
-          <p id="status" class="status" role="status">Connecting to live oil data...</p>
-        </section>
-
         <section class="metrics-grid">
           <article class="panel metric-card" data-series="wti">
             <p class="section-label">WTI</p>
@@ -93,7 +65,10 @@
               <p class="section-label">Trend</p>
               <h2>Last 30 reported days</h2>
             </div>
-            <button id="refresh-data" class="ghost-button" type="button">Refresh now</button>
+            <div class="chart-actions">
+              <p id="status" class="status" role="status">Connecting to live oil data...</p>
+              <button id="refresh-data" class="ghost-button" type="button">Refresh now</button>
+            </div>
           </div>
           <div class="chart-wrap">
             <canvas id="price-chart" aria-label="Oil price chart" role="img"></canvas>
