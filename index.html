@@ -23,10 +23,10 @@
       <header class="hero">
         <p class="eyebrow">GitHub Pages Ready</p>
         <div class="hero-copy">
-          <h1>Live crude oil pricing without a backend.</h1>
+          <h1>Live crude oil pricing with a real backend.</h1>
           <p>
             Track West Texas Intermediate and Brent spot prices with intraday refreshes,
-            historical context, and a browser-stored EIA API key.
+            historical context, and a server-side EIA integration.
           </p>
         </div>
         <div class="hero-meta">
@@ -46,22 +46,22 @@
           <div class="panel-heading">
             <div>
               <p class="section-label">Setup</p>
-              <h2>Connect your EIA API key</h2>
+              <h2>Connect your backend</h2>
             </div>
-            <button id="clear-key" class="ghost-button" type="button">Clear key</button>
+            <button id="clear-api-url" class="ghost-button" type="button">Clear URL</button>
           </div>
           <p class="panel-copy">
-            This app runs entirely in the browser. Your key is saved in local storage on
-            your device and sent only to the EIA API.
+            The frontend can stay on GitHub Pages, but the API key belongs on a backend.
+            Enter your deployed backend URL and this site will fetch oil data from it.
           </p>
-          <form id="api-form" class="api-form">
+          <form id="backend-form" class="api-form">
             <label class="field">
-              <span class="field-label">EIA API key</span>
+              <span class="field-label">Backend base URL</span>
               <input
-                id="api-key"
-                name="apiKey"
-                type="password"
-                placeholder="Paste your EIA API key"
+                id="api-base-url"
+                name="apiBaseUrl"
+                type="url"
+                placeholder="https://your-backend.onrender.com"
                 autocomplete="off"
                 spellcheck="false"
                 required
@@ -70,12 +70,9 @@
             <button class="primary-button" type="submit">Save and load prices</button>
           </form>
           <p class="helper-text">
-            Get a free key from
-            <a href="https://www.eia.gov/opendata/register.php" target="_blank" rel="noreferrer">
-              eia.gov/opendata
-            </a>.
+            Expected endpoint: <code>/api/oil</code> returning WTI and Brent history.
           </p>
-          <p id="status" class="status" role="status">Enter an API key to start.</p>
+          <p id="status" class="status" role="status">Enter your backend URL to start.</p>
         </section>
 
         <section class="metrics-grid">

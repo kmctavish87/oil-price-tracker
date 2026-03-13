@@ -1,23 +1,61 @@
 # Oil Price Tracker
 
-Static oil price tracker designed for GitHub Pages. It shows:
+Oil price tracker with:
 
 - Latest WTI spot price
 - Latest Brent spot price
 - Day-over-day change
 - 30-day comparison chart
 
-The app uses the U.S. Energy Information Administration API directly from the browser, so there is no backend to deploy.
+The frontend can stay on GitHub Pages. The backend is a small Node/Express API that keeps the EIA key on the server.
 
 ## Files
 
 - `index.html` - app markup
 - `styles.css` - layout and styling
-- `app.js` - EIA fetch logic, chart rendering, and refresh handling
+- `app.js` - frontend logic and backend API consumption
+- `server.js` - Express backend that proxies EIA
+- `.env.example` - backend environment variables
+- `package.json` - backend dependencies and scripts
 
-## Local use
+## Backend setup
 
-Open `index.html` in a browser, or serve the folder with any static file server.
+1. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Copy the example environment file:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Set `EIA_API_KEY` in `.env`.
+4. Leave `CORS_ORIGIN=*` for local testing, or set it to your frontend origin.
+5. Start the backend:
+
+   ```bash
+   npm run dev
+   ```
+
+6. Test it:
+
+   ```bash
+   curl http://localhost:3000/api/health
+   curl http://localhost:3000/api/oil
+   ```
+
+## Frontend local use
+
+Serve the frontend directory and enter `http://localhost:3000` as the backend URL:
+
+```bash
+python3 -m http.server 4173
+```
+
+Then open `http://localhost:4173`.
 
 ## GitHub Pages deployment
 
@@ -26,17 +64,22 @@ Open `index.html` in a browser, or serve the folder with any static file server.
 3. In GitHub, open `Settings` -> `Pages`.
 4. Under `Build and deployment`, set `Source` to `GitHub Actions`.
 5. Push to `main` or run the `Deploy static site to Pages` workflow manually.
-6. Open the published Pages URL and enter your EIA API key in the app.
+6. Deploy the backend separately on a Node host.
+7. Open the published Pages URL and enter your backend base URL in the app.
 
 The `.nojekyll` file is included so GitHub Pages serves the site as plain static content.
 
-## API key
+## Backend deployment
 
-Request a free key from the EIA open data portal:
+GitHub Pages cannot run a backend server. You need to deploy `server.js` to a service that supports Node processes.
 
-[https://www.eia.gov/opendata/register.php](https://www.eia.gov/opendata/register.php)
+Typical flow:
 
-The key is stored only in the browser's local storage on the device where you enter it.
+- Set `EIA_API_KEY`
+- Set `CORS_ORIGIN` to your GitHub Pages origin
+- Run `npm start`
+
+This repo also includes `render.yaml` if you want to deploy the backend on Render from the same GitHub repository.
 
 ## Data source
 

@@ -1,23 +1,20 @@
-const STORAGE_KEY = "oil-tracker-eia-api-key";
+const STORAGE_KEY = "oil-tracker-api-base-url";
 const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
-const HISTORY_POINTS = 30;
 const SERIES = {
   wti: {
-    id: "PET.RWTC.D",
     label: "WTI",
     color: "#b14d24",
   },
   brent: {
-    id: "PET.RBRTE.D",
     label: "Brent",
     color: "#1e5961",
   },
 };
 
 const elements = {
-  apiForm: document.querySelector("#api-form"),
-  apiKeyInput: document.querySelector("#api-key"),
-  clearKeyButton: document.querySelector("#clear-key"),
+  apiForm: document.querySelector("#backend-form"),
+  apiKeyInput: document.querySelector("#api-base-url"),
+  clearKeyButton: document.querySelector("#clear-api-url"),
   refreshButton: document.querySelector("#refresh-data"),
   status: document.querySelector("#status"),
   prices: {
@@ -50,14 +47,15 @@ function initialize() {
 
   elements.apiForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const apiKey = elements.apiKeyInput.value.trim();
+    const apiKey = normalizeBaseUrl(elements.apiKeyInput.value);
 
     if (!apiKey) {
-      setStatus("Enter a valid EIA API key.", "error");
+      setStatus("Enter a valid backend URL.", "error");
       return;
     }
 
     window.localStorage.setItem(STORAGE_KEY, apiKey);
+    elements.apiKeyInput.value = apiKey;
     await loadDashboard(apiKey);
   });
 
@@ -65,15 +63,15 @@ function initialize() {
     window.localStorage.removeItem(STORAGE_KEY);
     elements.apiKeyInput.value = "";
     clearDashboard();
-    setStatus("API key removed. Enter a key to start.", "default");
+    setStatus("Backend URL removed. Enter a URL to start.", "default");
     stopAutoRefresh();
   });
 
   elements.refreshButton.addEventListener("click", async () => {
-    const apiKey = elements.apiKeyInput.value.trim();
+    const apiKey = normalizeBaseUrl(elements.apiKeyInput.value);
 
     if (!apiKey) {
-      setStatus("Add an API key before refreshing.", "error");
+      setStatus("Add a backend URL before refreshing.", "error");
       return;
     }
 
@@ -83,13 +81,10 @@ function initialize() {
 
 async function loadDashboard(apiKey) {
   toggleLoading(true);
-  setStatus("Loading latest prices from EIA...", "default");
+  setStatus("Loading latest prices from your backend...", "default");
 
   try {
-    const [wti, brent] = await Promise.all([
-      fetchSeries(SERIES.wti.id, apiKey),
-      fetchSeries(SERIES.brent.id, apiKey),
-    ]);
+    const { wti, brent } = await fetchOilData(apiKey);
 
     updateMetric("wti", wti);
     updateMetric("brent", brent);
@@ -104,14 +99,8 @@ async function loadDashboard(apiKey) {
   }
 }
 
-async function fetchSeries(seriesId, apiKey) {
-  const params = new URLSearchParams();
-  params.set("api_key", apiKey);
-  params.set("sort[0][column]", "period");
-  params.set("sort[0][direction]", "desc");
-  params.set("length", String(HISTORY_POINTS));
-
-  const endpoint = `https://api.eia.gov/v2/seriesid/${encodeURIComponent(seriesId)}?${params.toString()}`;
+async function fetchOilData(apiBaseUrl) {
+  const endpoint = `${apiBaseUrl}/api/oil`;
   const response = await fetch(endpoint, {
     headers: {
       Accept: "application/json",
@@ -119,25 +108,20 @@ async function fetchSeries(seriesId, apiKey) {
   });
 
   if (!response.ok) {
-    throw new Error(`EIA request failed with status ${response.status}. Check your API key.`);
+    throw new Error(
+      `Backend request failed with status ${response.status}. Check your backend URL and deployment.`
+    );
   }
 
   const payload = await response.json();
-  const rawSeries = payload?.response?.data;
+  const wti = payload?.series?.wti;
+  const brent = payload?.series?.brent;
 
-  if (!Array.isArray(rawSeries) || rawSeries.length < 2) {
-    throw new Error(`EIA returned insufficient data for ${seriesId}.`);
+  if (!Array.isArray(wti) || !Array.isArray(brent) || wti.length < 2 || brent.length < 2) {
+    throw new Error("Backend returned insufficient oil price data.");
   }
 
-  const rows = rawSeries
-    .map((entry) => ({
-      date: entry.period,
-      value: Number(entry.value),
-    }))
-    .filter((entry) => Number.isFinite(entry.value))
-    .sort((left, right) => new Date(left.date) - new Date(right.date));
-
-  return rows;
+  return { wti, brent };
 }
 
 function updateMetric(key, rows) {
@@ -291,4 +275,19 @@ function formatDate(value, compact = false) {
     day: "numeric",
     year: compact ? undefined : "numeric",
   }).format(date);
+}
+
+function normalizeBaseUrl(value) {
+  const trimmed = value.trim().replace(/\/+$/, "");
+
+  if (!trimmed) {
+    return "";
+  }
+
+  try {
+    const url = new URL(trimmed);
+    return url.origin + url.pathname.replace(/\/+$/, "");
+  } catch (_error) {
+    return "";
+  }
 }
