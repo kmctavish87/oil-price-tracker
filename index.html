@@ -63,12 +63,21 @@
           <div class="panel-heading">
             <div>
               <p class="section-label">Trend</p>
-              <h2>Last 30 reported days</h2>
+              <h2 id="chart-title">Last 30 reported days</h2>
             </div>
             <div class="chart-actions">
               <p id="status" class="status" role="status">Connecting to live oil data...</p>
               <button id="refresh-data" class="ghost-button" type="button">Refresh now</button>
             </div>
+          </div>
+          <div class="range-selector" role="group" aria-label="Chart range">
+            <button class="range-button" type="button" data-range="1d">1D</button>
+            <button class="range-button" type="button" data-range="5d">5D</button>
+            <button class="range-button is-active" type="button" data-range="30d">30D</button>
+            <button class="range-button" type="button" data-range="90d">90D</button>
+            <button class="range-button" type="button" data-range="1y">1Y</button>
+            <button class="range-button" type="button" data-range="5y">5Y</button>
+            <button class="range-button" type="button" data-range="10y">10Y</button>
           </div>
           <div class="chart-wrap">
             <canvas id="price-chart" aria-label="Oil price chart" role="img"></canvas>

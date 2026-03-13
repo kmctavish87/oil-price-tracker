@@ -237,6 +237,29 @@ button:disabled {
   margin: 0;
 }
 
+.range-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.range-button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(23, 20, 17, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.range-button.is-active {
+  border-color: transparent;
+  background: var(--ink);
+  color: #fffaf0;
+}
+
 .status.is-error {
   color: var(--danger);
 }
@@ -334,5 +357,9 @@ button:disabled {
 
   .chart-wrap {
     height: 300px;
+  }
+
+  .chart-actions {
+    justify-content: space-between;
   }
 }

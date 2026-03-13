@@ -6,13 +6,22 @@ dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
-const historyPoints = 30;
 const eiaApiKey = process.env.EIA_API_KEY;
 const corsOrigin = process.env.CORS_ORIGIN || "*";
 
 const SERIES = {
   wti: "PET.RWTC.D",
   brent: "PET.RBRTE.D",
+};
+
+const RANGES = {
+  "1d": { points: 2, chartPoints: 1, label: "1 day" },
+  "5d": { points: 5, chartPoints: 5, label: "5 days" },
+  "30d": { points: 30, chartPoints: 30, label: "30 days" },
+  "90d": { points: 90, chartPoints: 90, label: "90 days" },
+  "1y": { points: 365, chartPoints: 365, label: "1 year" },
+  "5y": { points: 1825, chartPoints: 1825, label: "5 years" },
+  "10y": { points: 3650, chartPoints: 3650, label: "10 years" },
 };
 
 app.use(
@@ -29,7 +38,7 @@ app.get("/api/health", (_request, response) => {
   });
 });
 
-app.get("/api/oil", async (_request, response) => {
+app.get("/api/oil", async (request, response) => {
   if (!eiaApiKey) {
     response.status(500).json({
       error: "Server is missing EIA_API_KEY.",
@@ -38,14 +47,22 @@ app.get("/api/oil", async (_request, response) => {
   }
 
   try {
+    const requestedRange = typeof request.query.range === "string" ? request.query.range : "30d";
+    const rangeKey = requestedRange in RANGES ? requestedRange : "30d";
+    const range = RANGES[rangeKey];
     const [wti, brent] = await Promise.all([
-      fetchSeries(SERIES.wti),
-      fetchSeries(SERIES.brent),
+      fetchSeries(SERIES.wti, range.points),
+      fetchSeries(SERIES.brent, range.points),
     ]);
 
     response.json({
       updatedAt: new Date().toISOString(),
       source: "U.S. Energy Information Administration",
+      range: {
+        key: rangeKey,
+        label: range.label,
+        chartPoints: range.chartPoints,
+      },
       series: {
         wti,
         brent,
@@ -63,12 +80,12 @@ app.listen(port, () => {
   console.log(`Oil price backend listening on http://localhost:${port}`);
 });
 
-async function fetchSeries(seriesId) {
+async function fetchSeries(seriesId, points) {
   const params = new URLSearchParams();
   params.set("api_key", eiaApiKey);
   params.set("sort[0][column]", "period");
   params.set("sort[0][direction]", "desc");
-  params.set("length", String(historyPoints));
+  params.set("length", String(points));
 
   const response = await fetch(
     `https://api.eia.gov/v2/seriesid/${encodeURIComponent(seriesId)}?${params.toString()}`,
